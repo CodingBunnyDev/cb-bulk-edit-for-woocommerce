@@ -1,0 +1,290 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CodingBunny Bulk Edit for WooCommerce\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-10-21 15:01+0000\n"
+"PO-Revision-Date: 2024-10-23 14:58+0200\n"
+"Last-Translator: Matteo De Maria <info@dmmwebdesign.it>\n"
+"Language-Team: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.5\n"
+"X-Loco-Version: 2.6.11; wp-6.6.2\n"
+"X-Domain: coding-bunny-bulk-edit\n"
+
+#: inc/updates-check.php:54
+#, php-format
+msgid ""
+"A new version (%s) of the <b>CodingBunny Bulk Edit for WooCommerce</b> "
+"plugin is available. <a href=\"%s\">Download the latest version here.</a>"
+msgstr ""
+"È disponibile una nuova versione (%s) del plugin <b>CodingBunny Bulk Edit "
+"for WooCommerce</b>. <a href=\"%s\">Scarica l'ultima versione qui.</a>"
+
+#: inc/settings-page.php:93
+msgid "A-Z"
+msgstr "A-Z"
+
+#: inc/licence-validation.php:131
+msgid "Active Licence"
+msgstr "Licenza attiva"
+
+#: inc/settings-page.php:100 inc/settings-page.php:109
+#: inc/settings-page.php:121 inc/settings-page.php:130
+#: inc/settings-page.php:141
+msgid "All"
+msgstr "Tutti"
+
+#: inc/settings-page.php:101
+msgid "Available"
+msgstr "Disponibile"
+
+#: inc/settings-page.php:324
+msgid "Bulk Edit"
+msgstr "Modifica di massa"
+
+#. Author of the plugin
+msgid "CodingBunny"
+msgstr "CodingBunny"
+
+#. Name of the plugin
+#: inc/settings-page.php:57 inc/licence-validation.php:105
+msgid "CodingBunny Bulk Edit for WooCommerce"
+msgstr "CodingBunny Bulk Edit for WooCommerce"
+
+#: inc/licence-validation.php:127
+msgid "Deactive Licence"
+msgstr "Disattiva licenza"
+
+#: inc/settings-page.php:331
+msgid "Discount (%)"
+msgstr "Sconto (%)"
+
+#: inc/settings-page.php:111 inc/settings-page.php:262
+#: inc/settings-page.php:402
+msgid "Draft"
+msgstr "Bozza"
+
+#: inc/settings-page.php:243
+msgid "Edit Product"
+msgstr "Edita prodotto"
+
+#: inc/licence-validation.php:111
+msgid "Email Account:"
+msgstr "Account email:"
+
+#: inc/settings-page.php:149
+msgid "Filter"
+msgstr "Filtra"
+
+#: inc/settings-page.php:128
+msgid "Filter by Attributes"
+msgstr "Filtra per attributi"
+
+#: inc/settings-page.php:98
+msgid "Filter by availability"
+msgstr "Filtra per disponibilità"
+
+#: inc/settings-page.php:119
+msgid "Filter by Category"
+msgstr "Filtra per categoria"
+
+#: inc/settings-page.php:106
+msgid "Filter by Status"
+msgstr "Filtra per stato"
+
+#: inc/settings-page.php:139
+msgid "Filter by term"
+msgstr "Filtra per termine"
+
+#: coding-bunny-bulk-edit.php:66
+msgid "Get CodingBunny Bulk Edit for WooCommerce PRO!"
+msgstr "Ottieni CodingBunny Bulk Edit for WooCommerce PRO!"
+
+#. Usa lo stesso slug del parent
+#. Titolo della pagina
+#: inc/licence-validation.php:32 inc/licence-validation.php:33
+msgid "Go Pro"
+msgstr "Passa a Pro"
+
+#: inc/settings-page.php:213 inc/settings-page.php:343
+#: inc/settings-page.php:369
+msgid "Height"
+msgstr "Altezza"
+
+#. Author URI of the plugin
+msgid "https://coding-bunny.com"
+msgstr "https://coding-bunny.com"
+
+#. URI of the plugin
+msgid "https://coding-bunny.com/woocommerce-bulk-edit/"
+msgstr "https://coding-bunny.com/woocommerce-bulk-edit/"
+
+#: inc/licence-validation.php:184
+msgid "Incorrect licence key or email"
+msgstr "Chiave di licenza o e-mail errata"
+
+#: inc/licence-validation.php:90
+msgid "Incorrect licence key or email: "
+msgstr "Chiave di licenza o e-mail errata: "
+
+#: inc/settings-page.php:213 inc/settings-page.php:339
+#: inc/settings-page.php:367
+msgid "Lenght"
+msgstr "Lunghezza"
+
+#: inc/licence-validation.php:139
+msgid "Licence Active"
+msgstr "Licenza attiva"
+
+#: inc/licence-validation.php:117
+msgid "Licence Key:"
+msgstr "Chiave di licenza:"
+
+#: inc/licence-validation.php:99
+msgid "Licence successfully deactivated!"
+msgstr "Licenza disattivata con successo!"
+
+#: inc/licence-validation.php:87
+msgid "Licence successfully validated!"
+msgstr "Licenza attivata con successo!"
+
+#. Parent slug
+#. Page title
+#: inc/licence-validation.php:15 inc/licence-validation.php:16
+#: inc/licence-validation.php:107
+msgid "Manage Licence"
+msgstr "Gestisci licenza"
+
+#: inc/settings-page.php:213 inc/settings-page.php:416
+msgid "Manage Stock"
+msgstr "Gestione magazzino"
+
+#: inc/settings-page.php:250 inc/settings-page.php:302
+#: inc/settings-page.php:431
+msgid "NO"
+msgstr "NO"
+
+#: inc/settings-page.php:102
+msgid "Out of Stock"
+msgstr "Esaurito"
+
+#: inc/settings-page.php:625
+msgid "Please select at least one product to update."
+msgstr "Seleziona almeno un prodotto da aggiornare."
+
+#: inc/settings-page.php:349 inc/licence-validation.php:157
+msgid "Powered by CodingBunny"
+msgstr "Powered by CodingBunny"
+
+#: inc/settings-page.php:68
+msgid "Product Finder"
+msgstr "Cerca prodotto"
+
+#: inc/settings-page.php:213
+msgid "Product name"
+msgstr "Nome Prodotto"
+
+#: inc/settings-page.php:69
+msgid "Product name..."
+msgstr "Nome del prodotto..."
+
+#: inc/settings-page.php:539 inc/settings-page.php:623
+msgid "Products successfully updated!"
+msgstr "Prodotti aggiornati con successo!"
+
+#: inc/settings-page.php:110 inc/settings-page.php:261
+#: inc/settings-page.php:401
+msgid "Published"
+msgstr "Pubblicato"
+
+#. Description of the plugin
+msgid "Quickly edit your e-commerce products."
+msgstr "Modifica rapidamente i tuoi prodotti."
+
+#: inc/settings-page.php:213 inc/settings-page.php:327
+msgid "Regular Price"
+msgstr "Prezzo"
+
+#: inc/settings-page.php:213 inc/settings-page.php:329
+msgid "Sale Price"
+msgstr "Prezzo scontato"
+
+#: inc/settings-page.php:325
+msgid ""
+"Select the products before making the bulk edit. Type ‘100’ to delete the ‘% "
+"Discount’."
+msgstr ""
+"Seleziona i prodotti prima di effettuare la modifica in blocco. Digita "
+"\"100\" per eliminare la \"% di sconto\"."
+
+#: coding-bunny-bulk-edit.php:55
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: inc/settings-page.php:213 inc/settings-page.php:365
+msgid "SKU"
+msgstr "SKU"
+
+#: inc/settings-page.php:91
+msgid "Sort by"
+msgstr "Ordina per"
+
+#: inc/settings-page.php:213 inc/settings-page.php:371
+msgid "Status"
+msgstr "Stato"
+
+#: inc/settings-page.php:213 inc/settings-page.php:333
+msgid "Stock Quantity"
+msgstr "Quantità"
+
+#: inc/settings-page.php:322
+msgid "Update products"
+msgstr "Aggiorna prodotti"
+
+#: inc/settings-page.php:347
+msgid "Update Products in Bulk"
+msgstr "Aggiornare i prodotti in massa"
+
+#: inc/settings-page.php:296
+msgid "Vedi prodotto"
+msgstr "Vedi prodotto"
+
+#: inc/settings-page.php:244
+msgid "View Product"
+msgstr "Vedi prodotto"
+
+#: inc/settings-page.php:213 inc/settings-page.php:337
+#: inc/settings-page.php:366
+msgid "Weight"
+msgstr "Peso"
+
+#: inc/settings-page.php:213 inc/settings-page.php:341
+#: inc/settings-page.php:368
+msgid "Width"
+msgstr "Larghezza"
+
+#: inc/settings-page.php:251 inc/settings-page.php:303
+#: inc/settings-page.php:432
+msgid "YES"
+msgstr "Sì"
+
+#: inc/licence-validation.php:204
+#, php-format
+msgid ""
+"Your <b>CodingBunny Bulk Edit for WooCommerce</b> licence expires in <b>%d "
+"days</b>! <a href=\"%s\">Renew now.</a>"
+msgstr ""
+"La tua licenza di <b>CodingBunny Bulk Edit for WooCommerce</b> scade tra "
+"<b>%d giorni</b>! <a href=\"%s\">Rinnova ora.</a>"
+
+#: inc/licence-validation.php:141
+msgid "Your licence expires on:"
+msgstr "La licenza scade il:"
+
+#: inc/settings-page.php:94
+msgid "Z-A"
+msgstr "Z-A"
