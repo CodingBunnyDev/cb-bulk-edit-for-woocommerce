@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CodingBunny Bulk Edit for WooCommerce\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-21 15:01+0000\n"
+"POT-Creation-Date: 2024-11-14 08:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -23,7 +23,7 @@ msgid ""
 "plugin is available. <a href=\"%s\">Download the latest version here.</a>"
 msgstr ""
 
-#: inc/settings-page.php:93
+#: inc/settings-page.php:112
 msgid "A-Z"
 msgstr ""
 
@@ -31,17 +31,17 @@ msgstr ""
 msgid "Active Licence"
 msgstr ""
 
-#: inc/settings-page.php:100 inc/settings-page.php:109 
-#: inc/settings-page.php:121 inc/settings-page.php:130 
-#: inc/settings-page.php:141
+#: inc/settings-page.php:119 inc/settings-page.php:132 
+#: inc/settings-page.php:140 inc/settings-page.php:149 
+#: inc/settings-page.php:160
 msgid "All"
 msgstr ""
 
-#: inc/settings-page.php:101
+#: inc/settings-page.php:120
 msgid "Available"
 msgstr ""
 
-#: inc/settings-page.php:324
+#: inc/settings-page.php:352
 msgid "Bulk Edit"
 msgstr ""
 
@@ -50,24 +50,28 @@ msgid "CodingBunny"
 msgstr ""
 
 #. Name of the plugin
-#: inc/settings-page.php:57 inc/licence-validation.php:105
+#: inc/settings-page.php:51 inc/licence-validation.php:105
 msgid "CodingBunny Bulk Edit for WooCommerce"
+msgstr ""
+
+#: inc/settings-page.php:174
+msgid "Collapse All"
 msgstr ""
 
 #: inc/licence-validation.php:127
 msgid "Deactive Licence"
 msgstr ""
 
-#: inc/settings-page.php:331
+#: inc/settings-page.php:359
 msgid "Discount (%)"
 msgstr ""
 
-#: inc/settings-page.php:111 inc/settings-page.php:262 
-#: inc/settings-page.php:402
+#: inc/settings-page.php:134 inc/settings-page.php:298 
+#: inc/settings-page.php:435
 msgid "Draft"
 msgstr ""
 
-#: inc/settings-page.php:243
+#: inc/settings-page.php:279
 msgid "Edit Product"
 msgstr ""
 
@@ -75,31 +79,35 @@ msgstr ""
 msgid "Email Account:"
 msgstr ""
 
-#: inc/settings-page.php:149
-msgid "Filter"
+#: inc/settings-page.php:173
+msgid "Expand All"
 msgstr ""
 
-#: inc/settings-page.php:128
+#: inc/settings-page.php:147
 msgid "Filter by Attributes"
 msgstr ""
 
-#: inc/settings-page.php:98
+#: inc/settings-page.php:117
 msgid "Filter by availability"
 msgstr ""
 
-#: inc/settings-page.php:119
+#: inc/settings-page.php:138
 msgid "Filter by Category"
 msgstr ""
 
-#: inc/settings-page.php:106
+#: inc/settings-page.php:130
 msgid "Filter by Status"
 msgstr ""
 
-#: inc/settings-page.php:139
+#: inc/settings-page.php:158
 msgid "Filter by term"
 msgstr ""
 
-#: coding-bunny-bulk-edit.php:66
+#: inc/settings-page.php:168
+msgid "Filter products"
+msgstr ""
+
+#: coding-bunny-bulk-edit.php:65
 msgid "Get CodingBunny Bulk Edit for WooCommerce PRO!"
 msgstr ""
 
@@ -109,8 +117,8 @@ msgstr ""
 msgid "Go Pro"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:343 
-#: inc/settings-page.php:369
+#: inc/settings-page.php:252 inc/settings-page.php:371 
+#: inc/settings-page.php:396
 msgid "Height"
 msgstr ""
 
@@ -130,9 +138,12 @@ msgstr ""
 msgid "Incorrect licence key or email: "
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:339 
-#: inc/settings-page.php:367
+#: inc/settings-page.php:252 inc/settings-page.php:367
 msgid "Lenght"
+msgstr ""
+
+#: inc/settings-page.php:394
+msgid "Length"
 msgstr ""
 
 #: inc/licence-validation.php:139
@@ -158,45 +169,45 @@ msgstr ""
 msgid "Manage Licence"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:416
+#: inc/settings-page.php:252 inc/settings-page.php:392
 msgid "Manage Stock"
 msgstr ""
 
-#: inc/settings-page.php:250 inc/settings-page.php:302 
-#: inc/settings-page.php:431
+#: inc/settings-page.php:286 inc/settings-page.php:330 
+#: inc/settings-page.php:416
 msgid "NO"
 msgstr ""
 
-#: inc/settings-page.php:102
+#: inc/settings-page.php:121
 msgid "Out of Stock"
 msgstr ""
 
-#: inc/settings-page.php:625
+#: inc/settings-page.php:602
 msgid "Please select at least one product to update."
 msgstr ""
 
-#: inc/settings-page.php:349 inc/licence-validation.php:157
+#: inc/settings-page.php:377 inc/licence-validation.php:157
 msgid "Powered by CodingBunny"
 msgstr ""
 
-#: inc/settings-page.php:68
-msgid "Product Finder"
+#: inc/settings-page.php:64
+msgid "Product ID..."
 msgstr ""
 
-#: inc/settings-page.php:213
+#: inc/settings-page.php:252
 msgid "Product name"
 msgstr ""
 
-#: inc/settings-page.php:69
+#: inc/settings-page.php:62
 msgid "Product name..."
 msgstr ""
 
-#: inc/settings-page.php:539 inc/settings-page.php:623
+#: inc/settings-page.php:529 inc/settings-page.php:600
 msgid "Products successfully updated!"
 msgstr ""
 
-#: inc/settings-page.php:110 inc/settings-page.php:261 
-#: inc/settings-page.php:401
+#: inc/settings-page.php:133 inc/settings-page.php:297 
+#: inc/settings-page.php:434
 msgid "Published"
 msgstr ""
 
@@ -204,68 +215,76 @@ msgstr ""
 msgid "Quickly edit your e-commerce products."
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:327
+#: inc/settings-page.php:252 inc/settings-page.php:355
 msgid "Regular Price"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:329
+#: inc/settings-page.php:252 inc/settings-page.php:357
 msgid "Sale Price"
 msgstr ""
 
-#: inc/settings-page.php:325
+#: inc/settings-page.php:63
+msgid "Search by ID"
+msgstr ""
+
+#: inc/settings-page.php:61
+msgid "Search by Name"
+msgstr ""
+
+#: inc/settings-page.php:353
 msgid ""
 "Select the products before making the bulk edit. Type ‘100’ to delete the ‘% "
 "Discount’."
 msgstr ""
 
-#: coding-bunny-bulk-edit.php:55
+#: coding-bunny-bulk-edit.php:54
 msgid "Settings"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:365
+#: inc/settings-page.php:252 inc/settings-page.php:391
 msgid "SKU"
 msgstr ""
 
-#: inc/settings-page.php:91
+#: inc/settings-page.php:110
 msgid "Sort by"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:371
+#: inc/settings-page.php:252 inc/settings-page.php:397
 msgid "Status"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:333
+#: inc/settings-page.php:252 inc/settings-page.php:361
 msgid "Stock Quantity"
 msgstr ""
 
-#: inc/settings-page.php:322
+#: inc/settings-page.php:350
 msgid "Update products"
 msgstr ""
 
-#: inc/settings-page.php:347
+#: inc/settings-page.php:375
 msgid "Update Products in Bulk"
 msgstr ""
 
-#: inc/settings-page.php:296
+#: inc/settings-page.php:324
 msgid "Vedi prodotto"
 msgstr ""
 
-#: inc/settings-page.php:244
+#: inc/settings-page.php:280
 msgid "View Product"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:337 
-#: inc/settings-page.php:366
+#: inc/settings-page.php:252 inc/settings-page.php:365 
+#: inc/settings-page.php:393
 msgid "Weight"
 msgstr ""
 
-#: inc/settings-page.php:213 inc/settings-page.php:341 
-#: inc/settings-page.php:368
+#: inc/settings-page.php:252 inc/settings-page.php:369 
+#: inc/settings-page.php:395
 msgid "Width"
 msgstr ""
 
-#: inc/settings-page.php:251 inc/settings-page.php:303 
-#: inc/settings-page.php:432
+#: inc/settings-page.php:287 inc/settings-page.php:331 
+#: inc/settings-page.php:417
 msgid "YES"
 msgstr ""
 
@@ -280,6 +299,6 @@ msgstr ""
 msgid "Your licence expires on:"
 msgstr ""
 
-#: inc/settings-page.php:94
+#: inc/settings-page.php:113
 msgid "Z-A"
 msgstr ""

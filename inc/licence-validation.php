@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define the plugin version
-define( 'CODING_BUNNY_BULK_EDIT_VERSION', '1.0.1' );
+define( 'CODING_BUNNY_BULK_EDIT_VERSION', '1.1.0' );
 
 // Function to add a submenu item for licence validation
 function coding_bunny_bulk_edit_submenu() {

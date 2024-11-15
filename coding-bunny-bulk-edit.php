@@ -4,7 +4,7 @@
  * Plugin Name: CodingBunny Bulk Edit for WooCommerce
  * Plugin URI:  https://coding-bunny.com/woocommerce-bulk-edit/
  * Description: Quickly edit your e-commerce products.
- * Version:     1.0.1
+ * Version:     1.1.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author:      CodingBunny
@@ -12,7 +12,7 @@
  * Text Domain: coding-bunny-bulk-edit
  * Domain Path: /languages
  * License: GNU General Public License v3.0 or later
- * WC tested up to: 9.3.2
+ * WC tested up to: 9.4.1
  * Requires Plugins: woocommerce
  */
 
@@ -30,7 +30,7 @@ $files_to_include = [
     'licence-validation.php', // Licence page
     'settings-page.php',     // Defines the settings page for the plugin
     'enqueue-scripts.php',    // Enqueues the necessary CSS and JS files
-	'updates-check.php'    // Updates page
+    'updates-check.php'    // Updates page
 ];
 
 // Loop through the array of files and securely include them if they exist
@@ -52,7 +52,7 @@ add_action( 'plugins_loaded', 'coding_bunny_bulk_edit_load_textdomain' );
 // Add "Settings" link in the plugins list page
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'coding_bunny_bulk_edit_action_links' );
 function coding_bunny_bulk_edit_action_links( $links ) {
-    $settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=coding-bunny-bulk-edit' ) ) . '">' . __( 'Settings', 'coding-bunny-bulk-edit' ) . '</a>';
+    $settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=coding-bunny-bulk-edit' ) ) . '">' . esc_html__( 'Settings', 'coding-bunny-bulk-edit' ) . '</a>';
     array_unshift( $links, $settings_link );
     return $links;
 }
@@ -60,16 +60,16 @@ function coding_bunny_bulk_edit_action_links( $links ) {
 // Add "Get PRO" link in the plugins list page
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'coding_bunny_be_add_pro_link' );
 function coding_bunny_be_add_pro_link( $links ) {
-    // Controlla se la licenza non è attiva
+    // Check if the licence is not active
     if ( ! be_is_licence_active() ) {
-        // Crea il link per la versione PRO con supporto per le traduzioni
-        $pro_link = '<a href="https://coding-bunny.com/bulk-edit/" style="color: #00A32A; font-weight: bold;">' . __( 'Get CodingBunny Bulk Edit for WooCommerce PRO!', 'coding-bunny-bulk-edit' ) . '</a>';
+        // Create the link for the PRO version with support for translations
+        $pro_link = '<a href="https://coding-bunny.com/bulk-edit/" style="color: #00A32A; font-weight: bold;">' . esc_html__( 'Get CodingBunny Bulk Edit for WooCommerce PRO!', 'coding-bunny-bulk-edit' ) . '</a>';
         
-        // Inserisce il link in cima all'array dei link del plugin
+        // Insert the link at the top of the plugin links array
         array_unshift( $links, $pro_link );
     }
     
-    // Restituisce l'array dei link modificato
+    // Return the modified links array
     return $links;
 }
 

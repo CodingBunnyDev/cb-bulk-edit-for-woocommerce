@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Function to check if the licence is valid
 function be_is_licence_active() {
+
     $licence_data = get_option( 'coding_bunny_bulk_edit_licence_data', ['key' => '', 'email' => ''] );
     $licence_key = $licence_data['key'];
     $licence_email = $licence_data['email'];
@@ -19,103 +20,121 @@ function be_is_licence_active() {
     return $response['success'];
 }
 
-// Hook the function into the 'plugins_loaded' action to ensure text domain is loaded after the plugin is fully initialized
 add_action( 'plugins_loaded', 'coding_bunny_bulk_edit_load_textdomain' );
 
-// Renderizza la pagina di modifica in blocco dei prodotti
+// Render the bulk edit products page
 function render_bulk_edit_products_page() {
+
     $licence_active = be_is_licence_active();
     
-	// Controlla se è stata inviata una richiesta per aggiornare i prodotti in blocco
     if ( isset( $_POST['bulk_update_products'] ) ) {
         update_bulk_products();
     }
 
-    // Controlla se è stata inviata una richiesta per aggiornare singoli prodotti
     if ( isset( $_POST['update_products'] ) ) {
         update_individual_products();
     }
 
-    // Filtri per categoria, disponibilità, attributo, termine e stato
+    // Retrieve filters for category, availability, attribute, term, and status
     $selected_category = isset( $_GET['product_category'] ) ? sanitize_text_field( wp_unslash( $_GET['product_category'] ) ) : '';
     $availability_filter = isset( $_GET['availability'] ) ? sanitize_text_field( wp_unslash( $_GET['availability'] ) ) : '';
     $selected_attribute = isset( $_GET['product_attribute'] ) ? sanitize_text_field( wp_unslash( $_GET['product_attribute'] ) ) : '';
     $selected_term = isset( $_GET['product_term'] ) ? sanitize_text_field( wp_unslash( $_GET['product_term'] ) ) : '';
     $selected_status = isset( $_GET['post_status'] ) ? sanitize_text_field( wp_unslash( $_GET['post_status'] ) ) : '';
-    
-    // Nuovo parametro di ordinamento
     $order_by = isset( $_GET['order_by'] ) ? sanitize_text_field( wp_unslash( $_GET['order_by'] ) ) : 'ASC';
-
-    // Nuovo parametro di ricerca
     $search_product_name = isset( $_GET['search_product_name'] ) ? sanitize_text_field( wp_unslash( $_GET['search_product_name'] ) ) : '';
-
-    // Recupera le categorie e gli attributi
+    $search_product_id = isset( $_GET['search_product_id'] ) ? absint( $_GET['search_product_id'] ) : '';
     $categories = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => false ] );
     $attributes = wc_get_attribute_taxonomies();
 
-	echo '<div class="wrap">';
+    echo '<div class="wrap">';
     echo '<h1>' . esc_html__( 'CodingBunny Bulk Edit for WooCommerce', 'coding-bunny-bulk-edit' ) . 
-         ' <span style="font-size: 10px;">v' . CODING_BUNNY_BULK_EDIT_VERSION . '</span></h1>';
+         ' <span style="font-size: 10px;">v' . esc_html( CODING_BUNNY_BULK_EDIT_VERSION ) . '</span></h1>';
     echo '<form method="get" action="">';
     echo '<input type="hidden" name="page" value="coding-bunny-bulk-edit">';
-echo '</div>';
+    echo '</div>';
 
-    
-    // Inizio del contenitore per i filtri
+    // Start filter container
     echo '<div class="filter-container">';
     
-    // Barra di ricerca per nome prodotto
-    echo '<label for="search_product_name" class="filter-label">' . esc_html__( 'Product Finder', 'coding-bunny-bulk-edit' ) . '</label>';
-	echo '<input type="text" name="search_product_name" id="search_product_name" class="filter-input" value="' . esc_attr( $search_product_name ) . '" placeholder="' . esc_attr__( 'Product name...', 'coding-bunny-bulk-edit' ) . '" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
-
+    // Search bar for product name and ID
+    echo '<label for="search_product_name" class="filter-label">' . esc_html__( 'Search by Name', 'coding-bunny-bulk-edit' ) . '</label>';
+    echo '<input type="text" name="search_product_name" id="search_product_name" class="filter-input" value="' . esc_attr( $search_product_name ) . '" placeholder="' . esc_attr__( 'Product name...', 'coding-bunny-bulk-edit' ) . '" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
+    echo '<label for="search_product_id" class="filter-label">' . esc_html__( 'Search by ID', 'coding-bunny-bulk-edit' ) . '</label>';
+    echo '<input type="number" name="search_product_id" id="search_product_id" class="filter-input" value="' . esc_attr( $search_product_id ) . '" placeholder="' . esc_attr__( 'Product ID...', 'coding-bunny-bulk-edit' ) . '" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
     
-    // Aggiunge il filtro per nome prodotto se presente
-if ( ! empty( $search_product_name ) ) {
-    add_filter( 'posts_search', 'search_only_in_titles', 10, 2 );
+    // Add filter for product name or ID if present
+if (!empty($search_product_name) || !empty($search_product_id)) {
+    add_filter('posts_search', 'search_by_name_or_variant_id', 10, 2);
 
-    function search_only_in_titles( $search, $wp_query ) {
+    function search_by_name_or_variant_id($search, $wp_query) {
         global $wpdb;
 
-        if ( isset( $wp_query->query_vars['s'] ) && ! empty( $wp_query->query_vars['s'] ) ) {
-            $search_term = esc_sql( $wp_query->query_vars['s'] );
-            $search = " AND {$wpdb->posts}.post_title LIKE '%{$search_term}%'";
+        if (isset($wp_query->query_vars['s']) && !empty($wp_query->query_vars['s'])) {
+            $search_term = esc_sql($wp_query->query_vars['s']);
+
+            // Check if the search term is numeric (ID of product or variant)
+            if (is_numeric($search_term)) {
+                $post_id = intval($search_term);
+
+                // Get parent product if it's a variant
+                $parent_id = $wpdb->get_var($wpdb->prepare(
+                    "SELECT post_parent FROM {$wpdb->posts} WHERE ID = %d AND post_type = 'product_variation'",
+                    $post_id
+                ));
+
+                if ($parent_id) {
+                    $post_id = $parent_id;
+                }
+
+                $search = $wpdb->prepare(
+                    " AND ({$wpdb->posts}.ID = %d OR {$wpdb->posts}.post_title LIKE %s)",
+                    $post_id,
+                    '%' . $wpdb->esc_like($search_term) . '%'
+                );
+            } else {
+                $search = $wpdb->prepare(
+                    " AND {$wpdb->posts}.post_title LIKE %s",
+                    '%' . $wpdb->esc_like($search_term) . '%'
+                );
+            }
         }
 
         return $search;
     }
 
-    $args['s'] = $search_product_name;  // Passa il termine di ricerca
+    $args['s'] = !empty($search_product_name) ? $search_product_name : $search_product_id;  // Pass the search term
 }
     
-    // Selettore di ordinamento
+    // Sort selector
     echo '<label for="order_by" class="filter-label">' . esc_html__( 'Sort by', 'coding-bunny-bulk-edit' ) . '</label>';
     echo '<select name="order_by" id="order_by" class="filter-select">';
     echo '<option value="ASC"' . selected( $order_by, 'ASC', false ) . '>' . esc_html__( 'A-Z', 'coding-bunny-bulk-edit' ) . '</option>';
     echo '<option value="DESC"' . selected( $order_by, 'DESC', false ) . '>' . esc_html__( 'Z-A', 'coding-bunny-bulk-edit' ) . '</option>';
     echo '</select>';
     
-	// Filtro per disponibilità
-	echo '<label for="availability" class="filter-label">' . esc_html__( 'Filter by availability', 'coding-bunny-bulk-edit' ) . '</label>';
-	echo '<select name="availability" id="availability" class="filter-select" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
-	echo '<option value="">' . esc_html__( 'All', 'coding-bunny-bulk-edit' ) . '</option>';
-	echo '<option value="instock"' . selected( $availability_filter, 'instock', false ) . '>' . esc_html__( 'Available', 'coding-bunny-bulk-edit' ) . '</option>';
-	echo '<option value="outofstock"' . selected( $availability_filter, 'outofstock', false ) . '>' . esc_html__( 'Out of Stock', 'coding-bunny-bulk-edit' ) . '</option>';
-	echo '</select>';
-    
-    // Filtro per stato
+    // Availability filter
+    echo '<label for="availability" class="filter-label">' . esc_html__( 'Filter by availability', 'coding-bunny-bulk-edit' ) . '</label>';
+    echo '<select name="availability" id="availability" class="filter-select" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
+    echo '<option value="">' . esc_html__( 'All', 'coding-bunny-bulk-edit' ) . '</option>';
+    echo '<option value="instock"' . selected( $availability_filter, 'instock', false ) . '>' . esc_html__( 'Available', 'coding-bunny-bulk-edit' ) . '</option>';
+    echo '<option value="outofstock"' . selected( $availability_filter, 'outofstock', false ) . '>' . esc_html__( 'Out of Stock', 'coding-bunny-bulk-edit' ) . '</option>';
+    echo '</select>';
+     
+    echo '</div>'; // End filter container
+
+    // Start another filter container
+    echo '<div class="filter-container">';
+	
+	// Status filter
     echo '<label for="post_status" class="filter-label">' . esc_html__( 'Filter by Status', 'coding-bunny-bulk-edit' ) . '</label>';
     echo '<select name="post_status" id="post_status" class="filter-select" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
-
     echo '<option value="">' . esc_html__( 'All', 'coding-bunny-bulk-edit' ) . '</option>';
     echo '<option value="publish"' . selected( $selected_status, 'publish', false ) . '>' . esc_html__( 'Published', 'coding-bunny-bulk-edit' ) . '</option>';
     echo '<option value="draft"' . selected( $selected_status, 'draft', false ) . '>' . esc_html__( 'Draft', 'coding-bunny-bulk-edit' ) . '</option>';
     echo '</select>';
     
-    echo '</div>'; // Fine del contenitore per i filtri
-    // Inizio del contenitore per i filtri
-    echo '<div class="filter-container">';
-    
-    // Filtro per categoria
+    // Category filter
     echo '<label for="product_category" class="filter-label">' . esc_html__( 'Filter by Category', 'coding-bunny-bulk-edit' ) . '</label>';
     echo '<select name="product_category" id="product_category" class="filter-select">';
     echo '<option value="">' . esc_html__( 'All', 'coding-bunny-bulk-edit' ) . '</option>';
@@ -124,7 +143,7 @@ if ( ! empty( $search_product_name ) ) {
     }
     echo '</select>';
     
-    // Filtro per attributi
+    // Attribute filter
     echo '<label for="product_attribute" class="filter-label">' . esc_html__( 'Filter by Attributes', 'coding-bunny-bulk-edit' ) . '</label>';
     echo '<select name="product_attribute" id="product_attribute" class="filter-select" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
     echo '<option value="">' . esc_html__( 'All', 'coding-bunny-bulk-edit' ) . '</option>';
@@ -133,7 +152,7 @@ if ( ! empty( $search_product_name ) ) {
     }
     echo '</select>';
 
-    // Filtro per termini degli attributi, se un attributo è stato selezionato
+    // Term filter if an attribute is selected
     if ( ! empty( $selected_attribute ) ) {
         $terms = get_terms( [ 'taxonomy' => 'pa_' . $selected_attribute, 'hide_empty' => false ] );
         echo '<label for="product_term" class="filter-label">' . esc_html__( 'Filter by term', 'coding-bunny-bulk-edit' ) . '</label>';
@@ -145,27 +164,50 @@ if ( ! empty( $search_product_name ) ) {
         echo '</select>';
     }
 
-    // Pulsante per applicare i filtri
-    echo '<input type="submit" value="' . esc_html__( 'Filter', 'coding-bunny-bulk-edit' ) . '" class="button button-primary" >';
-    echo '</div>'; // Fine del contenitore per i filtri
+    // Filter button
+    echo '<input type="submit" value="' . esc_html__( 'Filter products', 'coding-bunny-bulk-edit' ) . '" class="button button-primary" >';
+    echo '</div>';
     echo '</form>';
+	
+	echo '<div class="toggle-container">';
+	echo '<button type="button" id="expand-all" class="cb-button">' . esc_html__( 'Expand All', 'coding-bunny-bulk-edit' ) . '</button>';
+	echo '<button type="button" id="collapse-all" class="cb-button">' . esc_html__( 'Collapse All', 'coding-bunny-bulk-edit' ) . '</button>';
+	echo '</div>';
+	
+		?>
+	<script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function () {
+		document.getElementById('expand-all').addEventListener('click', function () {
+			const variations = document.querySelectorAll('.variation');
+			variations.forEach(function (variation) {
+				variation.style.display = '';
+			});
+		});
 
-    // Recupera tutti i prodotti in base ai filtri selezionati
+		document.getElementById('collapse-all').addEventListener('click', function () {
+			const variations = document.querySelectorAll('.variation');
+			variations.forEach(function (variation) {
+				variation.style.display = 'none';
+			});
+		});
+	});
+	</script>
+	<?php
+
+    // Retrieve all products based on selected filters
     $args = [
         'post_type' => [ 'product', 'product_variation' ],
         'posts_per_page' => -1,
-        'post_status' => [ 'publish', 'draft' ], // Include anche i prodotti in stato di bozza
+        'post_status' => [ 'publish', 'draft' ],
         'orderby' => 'title',
         'order' => $order_by,
         'no_found_rows' => true,
     ];
 
-    // Aggiunge il filtro per nome prodotto se presente
-    if ( ! empty( $search_product_name ) ) {
-        $args['s'] = $search_product_name;
+    if ( ! empty( $search_product_name ) || ! empty( $search_product_id ) ) {
+        $args['s'] = ! empty( $search_product_name ) ? $search_product_name : $search_product_id;
     }
 
-    // Aggiunge il filtro per categoria se selezionato
     if ( ! empty( $selected_category ) ) {
         $args['tax_query'] = [
             [
@@ -176,7 +218,6 @@ if ( ! empty( $search_product_name ) ) {
         ];
     }
 
-    // Aggiunge il filtro per disponibilità
     if ( ! empty( $availability_filter ) ) {
         $args['meta_query'] = [
             [
@@ -186,7 +227,6 @@ if ( ! empty( $search_product_name ) ) {
         ];
     }
 
-    // Aggiunge il filtro per attributo se selezionato
     if ( ! empty( $selected_attribute ) ) {
         $args['tax_query'][] = [
             'taxonomy' => 'pa_' . $selected_attribute,
@@ -195,17 +235,16 @@ if ( ! empty( $search_product_name ) ) {
         ];
     }
 
-    // Aggiunge il filtro per stato se selezionato
     if ( ! empty( $selected_status ) ) {
-        $args['post_status'] = $selected_status; // Filtro per stato
+        $args['post_status'] = $selected_status;
     }
 
-    $products = new WP_Query( $args ); // Esegue la query per recuperare i prodotti
+    $products = new WP_Query( $args );
 
-    // Ottiene informazioni sulle unità di misura
+    // Retrieve measurement units
     $currency_symbol = get_woocommerce_currency_symbol();
-    $weight_unit = get_option( 'woocommerce_weight_unit' ); // Unità di peso
-    $dimension_unit = get_option( 'woocommerce_dimension_unit' ); // Unità di dimensione
+    $weight_unit = get_option( 'woocommerce_weight_unit' ); // Weight unit
+    $dimension_unit = get_option( 'woocommerce_dimension_unit' ); // Dimension unit
 
     echo '<form method="post" action="">';
     echo '<div class="product-table-container" style="overflow-x: auto;">'; // Contenitore per la tabella dei prodotti
@@ -213,12 +252,10 @@ if ( ! empty( $search_product_name ) ) {
     echo '<thead><tr><th style="width: 10px;"></th><th style="width: 10px;"></th><th style="width: 10px;"><input type="checkbox" id="select-all"></th><th style="width: 150px;">' . esc_html__( 'Product name', 'coding-bunny-bulk-edit' ) . '</th><th style="width: 80px;">' . esc_html__( 'Regular Price', 'coding-bunny-bulk-edit' ) . ' (' . esc_html( $currency_symbol ) . ')</th><th style="width: 80px;">' . esc_html__( 'Sale Price', 'coding-bunny-bulk-edit' ) . ' (' . esc_html( $currency_symbol ) . ')</th><th style="width: 80px;">' . esc_html__( 'Manage Stock', 'coding-bunny-bulk-edit' ) . '</th><th style="width: 80px;">' . esc_html__( 'Stock Quantity', 'coding-bunny-bulk-edit' ) . '</th><th style="width: 80px;">' . esc_html__( 'SKU', 'coding-bunny-bulk-edit' ) . '</th><th style="width: 80px;">' . esc_html__( 'Weight', 'coding-bunny-bulk-edit' ) . ' (' . esc_html( $weight_unit ) . ')</th><th style="width: 80px;">' . esc_html__( 'Lenght', 'coding-bunny-bulk-edit' ) . ' (' . esc_html( $dimension_unit ) . ')</th><th style="width: 80px;">' . esc_html__( 'Width', 'coding-bunny-bulk-edit' ) . ' (' . esc_html( $dimension_unit ) . ')</th><th style="width: 80px;">' . esc_html__( 'Height', 'coding-bunny-bulk-edit' ) . ' (' . esc_html( $dimension_unit ) . ')</th><th style="width: 80px;">' . esc_html__( 'Status', 'coding-bunny-bulk-edit' ) . '</th><th style="width: 40px;">ID</th></tr></thead>';
     echo '<tbody>';
 
-    // Controlla se ci sono prodotti da visualizzare
     if ( $products->have_posts() ) {
         while ( $products->have_posts() ) : $products->the_post();
             global $product;
 
-            // Verifica se il prodotto è di tipo semplice o variabile
             if ( $product->is_type( 'simple' ) || $product->is_type( 'variable' ) ) {
                 $image_id = $product->get_image_id();
                 $product_id = $product->get_id();
@@ -230,15 +267,14 @@ if ( ! empty( $search_product_name ) ) {
                 $product_length = $product->get_length();
                 $product_width = $product->get_width();
                 $product_height = $product->get_height();
-                $icon = $product->is_type( 'variable' ) ? '<span class="toggle-icon" style="cursor:pointer;"> + </span>' : ''; // Icona per espandere le variazioni
-                $icon_var = $product->is_type( 'variable' ) ? '# ' : ''; // Prefisso per i prodotti variabili
+                $icon = $product->is_type( 'variable' ) ? '<span class="toggle-icon" style="cursor:pointer;"> + </span>' : ''; 
+                $icon_var = $product->is_type( 'variable' ) ? '# ' : '';
                 $product_sku = $product->get_sku();
                 $manage_stock = $product->get_manage_stock();
-                $selected_option = $manage_stock ? '1' : '0'; // Stato di gestione del magazzino
+                $selected_option = $manage_stock ? '1' : '0';
                 $product_link = get_permalink( $product_id );
                 $edit_link = get_edit_post_link( $product_id );
 
-                // Righe della tabella per il prodotto principale
 echo '<tr class="main-product" data-product-id="' . esc_attr( $product_id ) . '">';
 echo '<td><a href="' . esc_url( $edit_link ) . '" target="_blank" class="dashicons dashicons-edit" title="' . esc_attr__( 'Edit Product', 'coding-bunny-bulk-edit' ) . '"></a></td>';
 echo '<td><a href="' . esc_url( $product_link ) . '" target="_blank" class="dashicons dashicons-visibility" title="' . esc_attr__( 'View Product', 'coding-bunny-bulk-edit' ) . '"></a></td>';
@@ -265,37 +301,29 @@ echo '</td>';
 echo '<td>' . esc_html( $product_id ) . '</td>';
 echo '</tr>';
 
-                // Se il prodotto è variabile, visualizza le variazioni
                 if ( $product->is_type( 'variable' ) ) {
                     $variations = $product->get_available_variations();
 
                     foreach ( $variations as $variation ) {
                     $variation_id = $variation['variation_id'];
     
-    // Ottieni i valori
     $variation_regular_price = get_post_meta( $variation_id, '_regular_price', true );
     $variation_sale_price = get_post_meta( $variation_id, '_sale_price', true );
     $variation_stock = get_post_meta( $variation_id, '_stock', true );
     $variation_name = get_the_title( $variation_id );
-    
-    // Rimuovi il nome del prodotto dal nome della variazione
     $variation_name = str_replace( $product_name, '', $variation_name );
-
-    // Sostituisci le virgole con i trattini
     $variation_name = str_replace( ',', ' - ', $variation_name );
         
-                        // Recupera lo stato di gestione del magazzino per la variazione
                         $variation_product = wc_get_product( $variation_id );
                         $variation_manage_stock = $variation_product->get_manage_stock();
                         $variation_selected_option = $variation_manage_stock ? '1' : '0';
                         $variation_link = get_permalink( $variation_id );
                        
-// Righe della tabella per la variazione
-echo '<tr class="variation" data-parent-id="' . esc_attr( $product_id ) . '" style="display:none; background-color: #eeeeee;">';
+echo '<tr class="variation" data-parent-id="' . esc_attr( $product_id ) . '" style="display:none; background-color: #F6F5FF;">';
 echo '<td></td>';
 echo '<td><a href="' . esc_url( $variation_link ) . '" target="_blank" class="dashicons dashicons-visibility" title="' . esc_attr__( 'Vedi prodotto', 'coding-bunny-bulk-edit' ) . '"></a></td>';
 echo '<td><input type="checkbox" class="product-checkbox" name="selected_products[]" value="' . esc_attr( $variation_id ) . '"></td>';
-echo '<td>' . esc_html( $icon_var . $product_name ) . '<span style="color: #0d47a1;">' . esc_html( $variation_name ) . '</span></td>';
+echo '<td>' . esc_html( $icon_var . $product_name ) . '<span style="color: #7F54B2;">' . esc_html( $variation_name ) . '</span></td>';
 echo '<td><input type="number" step="0.01" name="regular_price[' . esc_attr( $variation_id ) . ']" value="' . esc_attr( $variation_regular_price ) . '" style="width: 100%;"></td>';
 echo '<td><input type="number" step="0.01" name="sale_price[' . esc_attr( $variation_id ) . ']" value="' . esc_attr( $variation_sale_price ) . '" style="width: 100%;"></td>';
 echo '<td><select name="manage_stock[' . esc_attr( $variation_id ) . ']" style="width: 100%;" ' . ( ! $licence_active ? 'disabled' : '' ) . '>';
@@ -350,279 +378,228 @@ echo '</tr>';
     echo '</form>';
     echo '</div>';
 
-    wp_reset_postdata(); // Ripristina i dati del post
+    wp_reset_postdata();
 }
 
-// Aggiungi la colonna SKU alla tabella dei prodotti
-add_filter( 'manage_edit-product_columns', 'coding_bunny_add_product_sku_column', 15 );
+add_filter('manage_edit-product_columns', 'coding_bunny_add_product_sku_column', 15);
 
-function coding_bunny_add_product_sku_column( $columns ) {
+function coding_bunny_add_product_sku_column($columns) {
     $new_columns = [];
-    foreach ( $columns as $key => $value ) {
+    foreach ($columns as $key => $value) {
         $new_columns[$key] = $value;
-        // Aggiunge le nuove colonne per SKU e dimensioni
-        if ( $key === 'title' ) { 
-            $new_columns['product_sku'] = __( 'SKU', 'coding-bunny-bulk-edit' );
-            $new_columns['product_weight'] = __( 'Weight', 'coding-bunny-bulk-edit' );
-            $new_columns['product_length'] = __( 'Lenght', 'coding-bunny-bulk-edit' );
-            $new_columns['product_width'] = __( 'Width', 'coding-bunny-bulk-edit' );
-            $new_columns['product_height'] = __( 'Height', 'coding-bunny-bulk-edit' );
-            // Aggiunge la colonna per lo stato
-            $new_columns['post_status'] = __( 'Status', 'coding-bunny-bulk-edit' );
+        if ($key === 'title') {
+            $new_columns['product_sku'] = __('SKU', 'coding-bunny-bulk-edit');
+			$new_columns['stock_management'] = __('Manage Stock', 'coding-bunny-bulk-edit');
+            $new_columns['product_weight'] = __('Weight', 'coding-bunny-bulk-edit');
+            $new_columns['product_length'] = __('Length', 'coding-bunny-bulk-edit');
+            $new_columns['product_width'] = __('Width', 'coding-bunny-bulk-edit');
+            $new_columns['product_height'] = __('Height', 'coding-bunny-bulk-edit');
+            $new_columns['post_status'] = __('Status', 'coding-bunny-bulk-edit');
         }
     }
-    return $new_columns; // Restituisce le nuove colonne
+    return $new_columns;
 }
 
-// Mostra il valore SKU e stato nella nuova colonna
-add_action( 'manage_product_posts_custom_column', 'coding_bunny_show_product_sku_column', 10, 2 );
+add_action('manage_product_posts_custom_column', 'coding_bunny_show_product_sku_column', 10, 2);
 
-function coding_bunny_show_product_sku_column( $column, $post_id ) {
-    $product = wc_get_product( $post_id );
+function coding_bunny_show_product_sku_column($column, $post_id) {
+    $product = wc_get_product($post_id);
 
-    if ( $column === 'product_sku' ) {
+    if ($column === 'product_sku') {
         $sku = $product->get_sku();
-        echo '<input type="text" name="sku[' . esc_attr( $post_id ) . ']" value="' . esc_attr( $sku ) . '" class="widefat" style="width: 100%;">';
-    } elseif ( $column === 'product_weight' ) {
-        $weight = $product->get_weight();
-        echo '<input type="number" step="0.01" name="weight[' . esc_attr( $post_id ) . ']" value="' . esc_attr( $weight ) . '" class="widefat" style="width: 100%;">';
-    } elseif ( $column === 'product_length' ) {
-        $length = $product->get_length();
-        echo '<input type="number" step="0.01" name="length[' . esc_attr( $post_id ) . ']" value="' . esc_attr( $length ) . '" class="widefat" style="width: 100%;">';
-    } elseif ( $column === 'product_width' ) {
-        $width = $product->get_width();
-        echo '<input type="number" step="0.01" name="width[' . esc_attr( $post_id ) . ']" value="' . esc_attr( $width ) . '" class="widefat" style="width: 100%;">';
-    } elseif ( $column === 'product_height' ) {
-        $height = $product->get_height();
-        echo '<input type="number" step="0.01" name="height[' . esc_attr( $post_id ) . ']" value="' . esc_attr( $height ) . '" class="widefat" style="width: 100%;">';
-    } elseif ( $column === 'post_status' ) {
-        $status = $product->get_status();
-        echo '<select name="post_status[' . esc_attr( $post_id ) . ']" style="width: 100%;">';
-        echo '<option value="publish"' . selected( $status, 'publish', false ) . '>' . esc_html__( 'Published', 'coding-bunny-bulk-edit' ) . '</option>';
-        echo '<option value="draft"' . selected( $status, 'draft', false ) . '>' . esc_html__( 'Draft', 'coding-bunny-bulk-edit' ) . '</option>';
-        echo '</select>';
-    }
-}
-
-// Aggiungi la colonna per la gestione del magazzino
-add_filter( 'manage_edit-product_columns', 'coding_bunny_add_product_stock_management_column', 15 );
-
-function coding_bunny_add_product_stock_management_column( $columns ) {
-    $new_columns = [];
-    foreach ( $columns as $key => $value ) {
-        $new_columns[$key] = $value;
-        // Aggiunge la colonna per la gestione del magazzino
-        if ( $key === 'product_sku' ) {
-            $new_columns['stock_management'] = __( 'Manage Stock', 'coding-bunny-bulk-edit' );
-        }
-    }
-    return $new_columns; // Restituisce le nuove colonne
-}
-
-// Mostra il selettore per la gestione del magazzino nella nuova colonna
-add_action( 'manage_product_posts_custom_column', 'coding_bunny_show_product_stock_management_column', 10, 2 );
-
-function coding_bunny_show_product_stock_management_column( $column, $post_id ) {
-    if ( $column === 'stock_management' ) {
-        $product = wc_get_product( $post_id );
+        echo '<input type="text" name="sku[' . esc_attr($post_id) . ']" value="' . esc_attr($sku) . '" class="widefat" style="width: 100%;">';
+    } elseif ($column === 'stock_management') {
+        $product = wc_get_product($post_id);
         $manage_stock = $product->get_manage_stock();
         $selected_option = $manage_stock ? '1' : '0';
-        echo '<select name="manage_stock[' . esc_attr( $post_id ) . ']" style="width: 100%;">'; // Selettore per la gestione del magazzino
-        echo '<option value="0"' . selected( $selected_option, '0', false ) . '>' . esc_html__( 'NO', 'coding-bunny-bulk-edit' ) . '</option>';
-        echo '<option value="1"' . selected( $selected_option, '1', false ) . '>' . esc_html__( 'YES', 'coding-bunny-bulk-edit' ) . '</option>';
+        echo '<select name="manage_stock[' . esc_attr($post_id) . ']" style="width: 100%;">'; // Stock management selector
+        echo '<option value="0"' . selected($selected_option, '0', false) . '>' . esc_html__('NO', 'coding-bunny-bulk-edit') . '</option>';
+        echo '<option value="1"' . selected($selected_option, '1', false) . '>' . esc_html__('YES', 'coding-bunny-bulk-edit') . '</option>';
+        echo '</select>';
+    } elseif ($column === 'product_weight') {
+        $weight = $product->get_weight();
+        echo '<input type="number" step="0.01" name="weight[' . esc_attr($post_id) . ']" value="' . esc_attr($weight) . '" class="widefat" style="width: 100%;">';
+    } elseif ($column === 'product_length') {
+        $length = $product->get_length();
+        echo '<input type="number" step="0.01" name="length[' . esc_attr($post_id) . ']" value="' . esc_attr($length) . '" class="widefat" style="width: 100%;">';
+    } elseif ($column === 'product_width') {
+        $width = $product->get_width();
+        echo '<input type="number" step="0.01" name="width[' . esc_attr($post_id) . ']" value="' . esc_attr($width) . '" class="widefat" style="width: 100%;">';
+    } elseif ($column === 'product_height') {
+        $height = $product->get_height();
+        echo '<input type="number" step="0.01" name="height[' . esc_attr($post_id) . ']" value="' . esc_attr($height) . '" class="widefat" style="width: 100%;">';
+    } elseif ($column === 'post_status') {
+        $status = $product->get_status();
+        echo '<select name="post_status[' . esc_attr($post_id) . ']" style="width: 100%;">';
+        echo '<option value="publish"' . selected($status, 'publish', false) . '>' . esc_html__('Published', 'coding-bunny-bulk-edit') . '</option>';
+        echo '<option value="draft"' . selected($status, 'draft', false) . '>' . esc_html__('Draft', 'coding-bunny-bulk-edit') . '</option>';
         echo '</select>';
     }
 }
 
-// Aggiorna lo stato di gestione del magazzino per i prodotti singoli
+// Update individual products
 function update_individual_products() {
-    // Controlla se tutte le informazioni necessarie sono state inviate
     if (
-        isset( $_POST['regular_price'] ) && 
-        isset( $_POST['sale_price'] ) && 
-        isset( $_POST['stock'] ) && 
-        isset( $_POST['sku'] ) && 
-        isset( $_POST['manage_stock'] ) && 
-        isset( $_POST['weight'] ) && 
-        isset( $_POST['length'] ) && 
-        isset( $_POST['width'] ) && 
-        isset( $_POST['height'] ) && 
-        isset( $_POST['post_status'] )
+        isset($_POST['regular_price']) && 
+        isset($_POST['sale_price']) && 
+        isset($_POST['stock']) && 
+        isset($_POST['sku']) && 
+        isset($_POST['manage_stock']) && 
+        isset($_POST['weight']) && 
+        isset($_POST['length']) && 
+        isset($_POST['width']) && 
+        isset($_POST['height']) && 
+        isset($_POST['post_status'])
     ) {
-        // Sanitizza e prepara i dati per l'aggiornamento
-        $regular_prices = array_map( 'wc_format_decimal', wp_unslash( $_POST['regular_price'] ) );
-        $sale_prices = array_map( 'wc_format_decimal', wp_unslash( $_POST['sale_price'] ) );
-        $stocks = array_map( 'wc_stock_amount', wp_unslash( $_POST['stock'] ) );
-        $skus = array_map( 'sanitize_text_field', wp_unslash( $_POST['sku'] ) );
-        $manage_stocks = wp_unslash( $_POST['manage_stock'] );
-        $weights = array_map( 'wc_format_decimal', wp_unslash( $_POST['weight'] ) );
-        $lengths = array_map( 'wc_format_decimal', wp_unslash( $_POST['length'] ) );
-        $widths = array_map( 'wc_format_decimal', wp_unslash( $_POST['width'] ) );
-        $heights = array_map( 'wc_format_decimal', wp_unslash( $_POST['height'] ) );
-        $post_statuses = wp_unslash( $_POST['post_status'] );
+        $regular_prices = array_map('wc_format_decimal', wp_unslash($_POST['regular_price']));
+        $sale_prices = array_map('wc_format_decimal', wp_unslash($_POST['sale_price']));
+        $stocks = array_map('wc_stock_amount', wp_unslash($_POST['stock']));
+        $skus = array_map('sanitize_text_field', wp_unslash($_POST['sku']));
+        $manage_stocks = wp_unslash($_POST['manage_stock']);
+        $weights = array_map('wc_format_decimal', wp_unslash($_POST['weight']));
+        $lengths = array_map('wc_format_decimal', wp_unslash($_POST['length']));
+        $widths = array_map('wc_format_decimal', wp_unslash($_POST['width']));
+        $heights = array_map('wc_format_decimal', wp_unslash($_POST['height']));
+        $post_statuses = wp_unslash($_POST['post_status']);
 
-        // Aggiorna i prodotti con i nuovi valori
-        foreach ( $regular_prices as $product_id => $regular_price ) {
-            $product = wc_get_product( $product_id );
+        foreach ($regular_prices as $product_id => $regular_price) {
+            $product = wc_get_product($product_id);
 
-            if ( $product ) {
-                // Aggiorna il prezzo di listino
-                if ( ! empty( $regular_price ) ) {
-                    $product->set_regular_price( $regular_price );
+            if ($product) {
+                if (!empty($regular_price)) {
+                    $product->set_regular_price($regular_price);
                 }
 
-                // Aggiorna il prezzo scontato
-                if ( isset( $sale_prices[$product_id] ) ) {
+                if (isset($sale_prices[$product_id])) {
                     $sale_price = $sale_prices[$product_id];
-                    if ( $sale_price === '' || $sale_price < 0 ) {
-                        $product->set_sale_price( '' );
+                    if ($sale_price === '' || $sale_price < 0) {
+                        $product->set_sale_price('');
                     } else {
-                        $product->set_sale_price( $sale_price );
+                        $product->set_sale_price($sale_price);
                     }
                 }
 
-                // Aggiorna la quantità di stock
-                if ( isset( $stocks[$product_id] ) && $stocks[$product_id] !== '' ) {
+                if (isset($stocks[$product_id]) && $stocks[$product_id] !== '') {
                     $stock = $stocks[$product_id];
-                    $product->set_stock_quantity( $stock );
+                    $product->set_stock_quantity($stock);
 
-                    // Aggiorna lo stato di stock se necessario
                     $stock_status = $stock > 0 ? 'instock' : 'outofstock';
-                    $product->set_stock_status( $stock_status );
+                    $product->set_stock_status($stock_status);
                 }
 
-                // Aggiorna il SKU
-                if ( isset( $skus[$product_id] ) ) {
+                if (isset($skus[$product_id])) {
                     $sku = $skus[$product_id];
-                    $product->set_sku( $sku );
+                    $product->set_sku($sku);
                 }
 
-                // Aggiorna il peso
-                if ( isset( $weights[$product_id] ) ) {
+                if (isset($weights[$product_id])) {
                     $weight = $weights[$product_id];
-                    $product->set_weight( $weight );
+                    $product->set_weight($weight);
                 }
 
-                // Aggiorna le dimensioni
-                if ( isset( $lengths[$product_id] ) ) {
+                if (isset($lengths[$product_id])) {
                     $length = $lengths[$product_id];
-                    $product->set_length( $length );
+                    $product->set_length($length);
                 }
-                if ( isset( $widths[$product_id] ) ) {
+                if (isset($widths[$product_id])) {
                     $width = $widths[$product_id];
-                    $product->set_width( $width );
+                    $product->set_width($width);
                 }
-                if ( isset( $heights[$product_id] ) ) {
+                if (isset($heights[$product_id])) {
                     $height = $heights[$product_id];
-                    $product->set_height( $height );
+                    $product->set_height($height);
                 }
 
-                // Aggiorna lo stato di gestione del magazzino
-                if ( isset( $manage_stocks[$product_id] ) && $manage_stocks[$product_id] === '1' ) {
-                    $product->set_manage_stock( true );
+                if (isset($manage_stocks[$product_id]) && $manage_stocks[$product_id] === '1') {
+                    $product->set_manage_stock(true);
                 } else {
-                    $product->set_manage_stock( false );
+                    $product->set_manage_stock(false);
                 }
 
-                // Aggiorna lo stato del post
-                if ( isset( $post_statuses[$product_id] ) ) {
+                if (isset($post_statuses[$product_id])) {
                     $post_status = $post_statuses[$product_id];
-                    $product->set_status( $post_status );
+                    $product->set_status($post_status);
                 }
 
-                // Salva le modifiche al prodotto
                 $product->save();
-                wc_delete_product_transients( $product_id ); // Elimina i transienti del prodotto per forzare il ricaricamento dei dati
+                wc_delete_product_transients($product_id);
             }
         }
 
-        echo '<div class="updated"><p>' . esc_html__( 'Products successfully updated!', 'coding-bunny-bulk-edit' ) . '</p></div>'; // Notifica di successo
+        echo '<div class="updated"><p>' . esc_html__('Products successfully updated!', 'coding-bunny-bulk-edit') . '</p></div>';
     }
 }
 
-// Aggiorna i prodotti in blocco
+// Update bulk products
 function update_bulk_products() {
-    // Controlla se è stato inviata una richiesta per aggiornare i prodotti in blocco
-    if ( isset( $_POST['bulk_update_products'] ) ) {
-        // Sanitizza e prepara i dati per l'aggiornamento
-        $bulk_regular_price = isset( $_POST['bulk_regular_price'] ) ? wc_format_decimal( wp_unslash( $_POST['bulk_regular_price'] ) ) : '';
-        $bulk_sale_price = isset( $_POST['bulk_sale_price'] ) ? wc_format_decimal( wp_unslash( $_POST['bulk_sale_price'] ) ) : '';
-        $bulk_discount_percentage = isset( $_POST['bulk_discount_percentage'] ) ? floatval( wp_unslash( $_POST['bulk_discount_percentage'] ) ) : 0;
-        $bulk_stock = isset( $_POST['bulk_stock'] ) ? wc_stock_amount( wp_unslash( $_POST['bulk_stock'] ) ) : '';
-        $bulk_weight = isset( $_POST['bulk_weight'] ) ? wc_format_decimal( wp_unslash( $_POST['bulk_weight'] ) ) : '';
-        $bulk_length = isset( $_POST['bulk_length'] ) ? wc_format_decimal( wp_unslash( $_POST['bulk_length'] ) ) : '';
-        $bulk_width = isset( $_POST['bulk_width'] ) ? wc_format_decimal( wp_unslash( $_POST['bulk_width'] ) ) : '';
-        $bulk_height = isset( $_POST['bulk_height'] ) ? wc_format_decimal( wp_unslash( $_POST['bulk_height'] ) ) : '';
+    if (isset($_POST['bulk_update_products'])) {
+        $bulk_regular_price = isset($_POST['bulk_regular_price']) ? wc_format_decimal(wp_unslash($_POST['bulk_regular_price'])) : '';
+        $bulk_sale_price = isset($_POST['bulk_sale_price']) ? wc_format_decimal(wp_unslash($_POST['bulk_sale_price'])) : '';
+        $bulk_discount_percentage = isset($_POST['bulk_discount_percentage']) ? floatval(wp_unslash($_POST['bulk_discount_percentage'])) : 0;
+        $bulk_stock = isset($_POST['bulk_stock']) ? wc_stock_amount(wp_unslash($_POST['bulk_stock'])) : '';
+        $bulk_weight = isset($_POST['bulk_weight']) ? wc_format_decimal(wp_unslash($_POST['bulk_weight'])) : '';
+        $bulk_length = isset($_POST['bulk_length']) ? wc_format_decimal(wp_unslash($_POST['bulk_length'])) : '';
+        $bulk_width = isset($_POST['bulk_width']) ? wc_format_decimal(wp_unslash($_POST['bulk_width'])) : '';
+        $bulk_height = isset($_POST['bulk_height']) ? wc_format_decimal(wp_unslash($_POST['bulk_height'])) : '';
 
-        // Aggiorna i prodotti selezionati
-        if ( ! empty( $_POST['selected_products'] ) && is_array( $_POST['selected_products'] ) ) {
-            foreach ( $_POST['selected_products'] as $product_id ) {
-                $product = wc_get_product( $product_id );
+        if (!empty($_POST['selected_products']) && is_array($_POST['selected_products'])) {
+            foreach ($_POST['selected_products'] as $product_id) {
+                $product = wc_get_product($product_id);
 
-                if ( $product ) {
-                    // Aggiorna il prezzo di listino
-                    if ( $bulk_regular_price !== '' ) {
-                        $product->set_regular_price( $bulk_regular_price );
+                if ($product) {
+                    if ($bulk_regular_price !== '') {
+                        $product->set_regular_price($bulk_regular_price);
                     }
                     
-                    // Aggiorna il prezzo scontato
-                    if ( $bulk_sale_price !== '' ) {
-                        $product->set_sale_price( $bulk_sale_price );
+                    if ($bulk_sale_price !== '') {
+                        $product->set_sale_price($bulk_sale_price);
                     }
-                        
-                    // Calcola e aggiorna il prezzo scontato basato sullo sconto percentuale
-					if ( isset( $bulk_discount_percentage ) && is_numeric( $bulk_discount_percentage ) ) {
-						// Controlla se il valore è maggiore o uguale a 0
-						if ( $bulk_discount_percentage > 0 && $bulk_discount_percentage < 100 ) {
-							$current_regular_price = $product->get_regular_price(); // Recupera il prezzo di listino attuale
-							if ( ! empty( $current_regular_price ) ) {
-								$discount = ( $current_regular_price * $bulk_discount_percentage ) / 100;
-								$sale_price = $current_regular_price - $discount;
-								$product->set_sale_price( $sale_price ); // Sovrascrive il prezzo scontato
-							}
-						} elseif ( $bulk_discount_percentage == 100 ) {
-							// Cancella il prezzo scontato se lo sconto è del 100%
-							$product->set_sale_price( '' ); // Cancella il prezzo scontato
-						} 
-					}
-                   
-                    // Aggiorna la quantità di stock
-                    if ( $bulk_stock > 0 ) {
-                        $product->set_stock_quantity( $bulk_stock );
+
+                    if (isset($bulk_discount_percentage) && is_numeric($bulk_discount_percentage)) {
+                        if ($bulk_discount_percentage > 0 && $bulk_discount_percentage < 100) {
+                            $current_regular_price = $product->get_regular_price();
+                            if (!empty($current_regular_price)) {
+                                $discount = ($current_regular_price * $bulk_discount_percentage) / 100;
+                                $sale_price = $current_regular_price - $discount;
+                                $product->set_sale_price($sale_price);
+                            }
+                        } elseif ($bulk_discount_percentage == 100) {
+                            $product->set_sale_price('');
+                        } 
+                    }
+                    
+                    if ($bulk_stock > 0) {
+                        $product->set_stock_quantity($bulk_stock);
                     } else {
                         $current_stock = $product->get_stock_quantity();
-                        $product->set_stock_quantity( $current_stock ); // Mantiene la quantità attuale se il valore è zero
+                        $product->set_stock_quantity($current_stock);
                     }
 
-                    // Aggiorna il peso
-                    if ( $bulk_weight !== '' ) {
-                        $product->set_weight( $bulk_weight );
+                    if ($bulk_weight !== '') {
+                        $product->set_weight($bulk_weight);
                     }
 
-                    // Aggiorna le dimensioni
-                    if ( $bulk_length !== '' ) {
-                        $product->set_length( $bulk_length );
+					if ($bulk_length !== '') {
+                        $product->set_length($bulk_length);
                     }
-                    if ( $bulk_width !== '' ) {
-                        $product->set_width( $bulk_width );
+                    if ($bulk_width !== '') {
+                        $product->set_width($bulk_width);
                     }
-                    if ( $bulk_height !== '' ) {
-                        $product->set_height( $bulk_height );
+                    if ($bulk_height !== '') {
+                        $product->set_height($bulk_height);
                     }
 
-                    // Aggiorna lo stato di stock
                     $stock_status = $bulk_stock > 0 ? 'instock' : 'outofstock';
-                    $product->set_stock_status( $stock_status );
+                    $product->set_stock_status($stock_status);
 
-                    // Salva le modifiche al prodotto
                     $product->save();
-                    wc_delete_product_transients( $product_id ); // Elimina i transienti del prodotto per forzare il ricaricamento dei dati
-                }
+                    wc_delete_product_transients($product_id);
             }
+			}
 
-            echo '<div class="updated"><p>' . esc_html__( 'Products successfully updated!', 'coding-bunny-bulk-edit' ) . '</p></div>'; // Notifica di successo
+            echo '<div class="updated"><p>' . esc_html__( 'Products successfully updated!', 'coding-bunny-bulk-edit' ) . '</p></div>';
         } else {
-            echo '<div class="error"><p>' . esc_html__( 'Please select at least one product to update.', 'coding-bunny-bulk-edit' ) . '</p></div>'; // Notifica di errore
+            echo '<div class="error"><p>' . esc_html__( 'Please select at least one product to update.', 'coding-bunny-bulk-edit' ) . '</p></div>';
         }
     }
 }
