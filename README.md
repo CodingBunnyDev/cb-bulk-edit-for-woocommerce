@@ -2,7 +2,6 @@
 
 ![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)
 ![WordPress Version](https://img.shields.io/badge/WordPress-%3E%3D%206.0-blue.svg)
-![WordPress Tested Up To](https://img.shields.io/badge/WordPress-%3E%3D%206.7.1-blue.svg)
 ![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.0-orange.svg)
 ![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
 ![WooCommerce Tested Up To](https://img.shields.io/badge/WooCommerce-9.4.2-green.svg)
