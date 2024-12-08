@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Seleziona/Deseleziona tutte le checkbox
     document.getElementById('select-all').addEventListener('change', function (e) {
         const checkboxes = document.querySelectorAll('.product-checkbox');
         checkboxes.forEach(checkbox => {
